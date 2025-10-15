@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors Rumble</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .bounce-animation {
+            animation: bounce 0.5s infinite;
+        }
+        .choice-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 to-indigo-800 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Rock Paper Scissors Rumble</h1>
+            <p class="text-xl opacity-80">Choose your weapon and battle the computer!</p>
+        </header>
+
+        <div class="flex flex-col items-center">
+            <!-- Score Display -->
+            <div class="bg-black bg-opacity-30 rounded-full px-8 py-4 mb-12">
+                <div class="flex justify-between items-center space-x-8">
+                    <div class="text-center">
+                        <p class="text-sm opacity-70">You</p>
+                        <p id="player-score" class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm opacity-70">Computer</p>
+                        <p id="computer-score" class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="flex justify-center mb-12">
+                <div class="text-center mx-6">
+                    <div id="player-choice" class="w-32 h-32 bg-indigo-700 rounded-full flex items-center justify-center mb-4">
+                        <i data-feather="help-circle" class="w-16 h-16"></i>
+                    </div>
+                    <p class="text-lg">Your Choice</p>
+                </div>
+                <div class="text-center mx-6">
+                    <div id="computer-choice" class="w-32 h-32 bg-pink-700 rounded-full flex items-center justify-center mb-4">
+                        <i data-feather="help-circle" class="w-16 h-16"></i>
+                    </div>
+                    <p class="text-lg">Computer</p>
+                </div>
+            </div>
+
+            <!-- Result Display -->
+            <div id="result" class="text-2xl font-bold mb-12 h-10"></div>
+
+            <!-- Choice Buttons -->
+            <div class="flex flex-wrap justify-center gap-6 mb-12">
+                <button class="choice-btn bg-blue-500 hover:bg-blue-600 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300" data-choice="rock">
+                    <i data-feather="triangle" class="w-12 h-12 rotate-180"></i>
+                </button>
+                <button class="choice-btn bg-green-500 hover:bg-green-600 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300" data-choice="paper">
+                    <i data-feather="square" class="w-12 h-12"></i>
+                </button>
+                <button class="choice-btn bg-red-500 hover:bg-red-600 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300" data-choice="scissors">
+                    <i data-feather="scissors" class="w-12 h-12"></i>
+                </button>
+            </div>
+
+            <!-- Reset Button -->
+            <button id="reset-btn" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-full font-bold transition-all duration-300">
+                Reset Game
+            </button>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        
+        const choices = ['rock', 'paper', 'scissors'];
+        let playerScore = 0;
+        let computerScore = 0;
+        
+        const playerChoiceDisplay = document.getElementById('player-choice');
+        const computerChoiceDisplay = document.getElementById('computer-choice');
+        const resultDisplay = document.getElementById('result');
+        const playerScoreDisplay = document.getElementById('player-score');
+        const computerScoreDisplay = document.getElementById('computer-score');
+        const choiceButtons = document.querySelectorAll('.choice-btn');
+        const resetButton = document.getElementById('reset-btn');
+        
+        // Player makes a choice
+        choiceButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const playerChoice = button.getAttribute('data-choice');
+                playGame(playerChoice);
+            });
+        });
+        
+        // Reset the game
+        resetButton.addEventListener('click', resetGame);
+        
+        function playGame(playerChoice) {
+            // Reset animations
+            playerChoiceDisplay.classList.remove('bounce-animation');
+            computerChoiceDisplay.classList.remove('bounce-animation');
+            
+            // Show player choice
+            playerChoiceDisplay.innerHTML = '';
+            const playerIcon = document.createElement('i');
+            playerIcon.setAttribute('data-feather', getIconForChoice(playerChoice));
+            playerChoiceDisplay.appendChild(playerIcon);
+            
+            // Add bounce animation to player choice
+            playerChoiceDisplay.classList.add('bounce-animation');
+            
+            // Computer makes a random choice after a slight delay
+            setTimeout(() => {
+                const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+                
+                // Show computer choice
+                computerChoiceDisplay.innerHTML = '';
+                const computerIcon = document.createElement('i');
+                computerIcon.setAttribute('data-feather', getIconForChoice(computerChoice));
+                computerChoiceDisplay.appendChild(computerIcon);
+                
+                // Add bounce animation to computer choice
+                computerChoiceDisplay.classList.add('bounce-animation');
+                
+                // Determine the winner
+                const result = determineWinner(playerChoice, computerChoice);
+                displayResult(result);
+                
+                feather.replace();
+            }, 500);
+        }
+        
+        function getIconForChoice(choice) {
+            switch(choice) {
+                case 'rock': return 'triangle';
+                case 'paper': return 'square';
+                case 'scissors': return 'scissors';
+                default: return 'help-circle';
+            }
+        }
+        
+        function determineWinner(playerChoice, computerChoice) {
+            if (playerChoice === computerChoice) {
+                return 'draw';
+            } else if (
+                (playerChoice === 'rock' && computerChoice === 'scissors') ||
+                (playerChoice === 'paper' && computerChoice === 'rock') ||
+                (playerChoice === 'scissors' && computerChoice === 'paper')
+            ) {
+                playerScore++;
+                playerScoreDisplay.textContent = playerScore;
+                return 'win';
+            } else {
+                computerScore++;
+                computerScoreDisplay.textContent = computerScore;
+                return 'lose';
+            }
+        }
+        
+        function displayResult(result) {
+            let message = '';
+            let color = '';
+            
+            switch(result) {
+                case 'win':
+                    message = 'You Win! 🎉';
+                    color = 'text-green-400';
+                    createConfetti();
+                    break;
+                case 'lose':
+                    message = 'You Lose! 😢';
+                    color = 'text-red-400';
+                    break;
+                case 'draw':
+                    message = "It's a Draw! 🤝";
+                    color = 'text-yellow-400';
+                    break;
+            }
+            
+            resultDisplay.textContent = message;
+            resultDisplay.className = `text-2xl font-bold mb-12 h-10 ${color}`;
+        }
+        
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            playerScoreDisplay.textContent = '0';
+            computerScoreDisplay.textContent = '0';
+            resultDisplay.textContent = '';
+            resultDisplay.className = 'text-2xl font-bold mb-12 h-10';
+            
+            playerChoiceDisplay.innerHTML = '';
+            const playerIcon = document.createElement('i');
+            playerIcon.setAttribute('data-feather', 'help-circle');
+            playerChoiceDisplay.appendChild(playerIcon);
+            
+            computerChoiceDisplay.innerHTML = '';
+            const computerIcon = document.createElement('i');
+            computerIcon.setAttribute('data-feather', 'help-circle');
+            computerChoiceDisplay.appendChild(computerIcon);
+            
+            feather.replace();
+        }
+        
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // Random properties
+                const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 10 + 5;
+                const posX = Math.random() * window.innerWidth;
+                const animDuration = Math.random() * 3 + 2;
+                
+                confetti.style.backgroundColor = color;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.left = `${posX}px`;
+                confetti.style.top = '-10px';
+                confetti.style.opacity = '1';
+                confetti.style.borderRadius = '50%';
+                confetti.style.position = 'fixed';
+                confetti.style.zIndex = '9999';
+                
+                document.body.appendChild(confetti);
+                
+                // Animate confetti
+                const anim = confetti.animate([
+                    { top: '-10px', opacity: 1 },
+                    { top: `${Math.random() * window.innerHeight}px`, opacity: 0 }
+                ], {
+                    duration: animDuration * 1000,
+                    easing: 'cubic-bezier(0.1, 0.8, 0.9, 1)'
+                });
+                
+                // Remove confetti after animation
+                anim.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+    </script>
+</body>
+</html>
